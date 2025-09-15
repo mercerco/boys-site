@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Boys Soccer — Fall 2025</title>
-  <link rel="icon" href="data:,"><!-- suppress favicon 404 locally -->
+  <title>Pre-K Boys Soccer — Fall 2025</title>
+  <link rel="icon" href="data:"><!-- avoid local favicon 404 -->
 
-  <!-- FullCalendar CSS + JS (jsDelivr) -->
+  <!-- FullCalendar (CSS + JS) -->
   <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
 
@@ -16,13 +16,14 @@
   <script src="https://cdn.jsdelivr.net/npm/lightgallery@2.7.2/plugins/zoom/lg-zoom.umd.min.js"></script>
 
   <style>
-    :root{ --bg:#f8fafc; --panel:#ffffff; --text:#0f172a; --muted:#475569; --accent:#0ea5e9; --game:#b45309; --practice:#10b981; --break:#64748b; }
+    :root{ --bg:#f8fafc; --panel:#ffffff; --text:#0f172a; --muted:#475569; --accent:#0ea5e9; --game:#098fb4; --practice:#08bb7f; --break:#64748b; }
     html,body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text)}
     a{color:var(--accent);text-decoration:none}
     header{position:sticky;top:0;background:rgba(255,255,255,.9);backdrop-filter:saturate(180%) blur(8px);border-bottom:1px solid #e5e7eb;z-index:20}
     .wrap{max-width:1100px;margin:0 auto;padding:1rem}
     .brand{display:flex;gap:.75rem;align-items:center}
     .brand h1{font-size:1.25rem;margin:0}
+    .logo-emoji{font-size:28px;line-height:1;display:inline-block;transform:translateY(2px)}
     .nav{display:flex;gap:1rem;align-items:center}
     .grid{display:grid;grid-template-columns:1fr;gap:1rem}
     @media(min-width:980px){.grid{grid-template-columns:320px 1fr}}
@@ -48,19 +49,22 @@
     .btn:hover{opacity:.9}
     .btn.secondary{background:#111827}
 
-    /* background image (place boys-site/img/soccer-bg.jpg) */
+    /* Fun background image (place boys-site/img/soccer-bg.jpg) */
     body{ background: linear-gradient(rgba(255,255,255,.65), rgba(255,255,255,.65)), url('img/soccer-bg.jpg') center / cover fixed no-repeat; }
+
+    /* Make anchor-jumps land below sticky header */
+    #practiceDetails{ scroll-margin-top: 96px; }
   </style>
 </head>
 <body>
   <header>
     <div class="wrap" style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap">
       <div class="brand">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" stroke="#0ea5e9" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="#0ea5e9"/></svg>
-        <h1>Boys Soccer — Fall 2025</h1>
+        <span class="logo-emoji" aria-label="soccer ball">⚽</span>
+        <h1>Pre-K Boys Soccer — Fall 2025</h1>
       </div>
       <nav class="nav">
-        <a class="btn" target="_blank" rel="noopener" href="https://docs.google.com/spreadsheets/d/1t5dFCm_IfS1mc6034GU1Isyh-FuoFFz--6jUgtM5ZIg/edit?gid=1130140407#gid=1130140407">🍎 Snack Sign-Up (Live Sheet)</a>
+        <a class="btn" target="_blank" rel="noopener" href="https://docs.google.com/spreadsheets/d/1t5dFCm_IfS1mc6034GU1Isyh-FuoFFz--6jUgtM5ZIg/edit?gid=1130140407#gid=1130140407">🍎 Snack Sign-Up </a>
         <a class="btn secondary" href="#gallery">📷 Photos</a>
       </nav>
     </div>
@@ -82,14 +86,16 @@
             <span><i class="dot break"></i> Break / No events</span>
           </div>
           <div id="calendar" class="calendar-wrap"></div>
-          <p class="help">Snack volunteer names sync from the Google Snacks sheet. Click any practice to see details below.</p>
+          <p class="help">Snack volunteer names sync from the Google Snacks sheet. Tap any event to see details below.</p>
         </div>
       </section>
     </div>
 
     <section class="panel" style="margin-top:1rem">
       <h2>Practice Details</h2>
-      <div class="content"><div id="practiceDetails"><p class="help">Select a practice in the calendar to see the plan here.</p></div></div>
+      <div class="content">
+        <div id="practiceDetails"><p class="help">Select an event in the calendar to see details here.</p></div>
+      </div>
     </section>
 
     <footer class="wrap">
@@ -98,19 +104,18 @@
   </main>
 
   <script>
-  // ===== Config (all tabs are in the same spreadsheet) =====
-  const SHEET_ID     = '1t5dFCm_IfS1mc6034GU1Isyh-FuoFFz--6jUgtM5ZIg';
+  // ===== Config (boys tabs on your shared sheet) =====
+  const SHEET_ID   = '1t5dFCm_IfS1mc6034GU1Isyh-FuoFFz--6jUgtM5ZIg';
   const SCHEDULE_GID = '876110210';   // Boys schedule tab
   const SNACKS_GID   = '1130140407';  // Boys snacks tab
   const PICS_GID     = '392826494';   // Boys pics tab
 
-  // ===== lightGallery =====
+  // ===== lightGallery init =====
   function initLightGallery(){
     try{ lightGallery(document.getElementById('photoGrid'), { selector:'a', plugins:[lgZoom], speed:300, licenseKey:'0000-0000-000-0000' }); }catch(e){}
   }
 
-  // ===== Google Drive helpers
-  // We now use Drive's thumbnail endpoint for BOTH thumb and full-size (w=2000) to avoid CORS/HTML responses
+  // ===== Google Drive link helper (works with either /file/d/.../view or ?id=) =====
   function driveLinks(u){
     if(!u) return { full:'', thumb:'', view:'' };
     let id='';
@@ -120,12 +125,9 @@
     }catch(e){}
     if(!id) return { full:u, thumb:u, view:u };
     return {
-      // Large image (good for lightbox)
-      full:  `https://drive.google.com/thumbnail?id=${id}&sz=w2000`,
-      // Fast thumbnail
-      thumb: `https://drive.google.com/thumbnail?id=${id}&sz=w600`,
-      // View fallback if needed
-      view:  `https://drive.google.com/uc?export=view&id=${id}`
+      full:  `https://drive.google.com/thumbnail?id=${id}&sz=w2000`, // large for lightbox
+      thumb: `https://drive.google.com/thumbnail?id=${id}&sz=w600`,  // grid thumb
+      view:  `https://drive.google.com/uc?export=view&id=${id}`      // fallback
     };
   }
 
@@ -154,24 +156,19 @@
     if(typeof v==='number'){ const ms=(v-25569)*86400*1000; const d=new Date(ms); if(!isNaN(d)) return d; }
     return null;
   }
-  // --- time-only helpers ---
-  function pad2(n){ return String(n).padStart(2,'0'); }
+  // Time helpers for Excel/Sheets times
+  const pad2=n=>String(n).padStart(2,'0');
   function formatHM(h,m){ let H=((h%24)+24)%24; const ampm=H>=12?'PM':'AM'; const h12=H%12||12; return `${h12}:${pad2(m)} ${ampm}`; }
-  function formatTime(d){ return formatHM(d.getHours(), d.getMinutes()); }
   function parseGvizTime(cell){
     if(!cell) return '';
     const v=(cell.v!==undefined&&cell.v!==null)?cell.v:cell.f;
     if(typeof v==='string'){
-      let m=v.match(/Date\(\s*1899\s*,\s*11\s*,\s*30\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/i);
+      const m=v.match(/Date\(\s*1899\s*,\s*11\s*,\s*30\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/i);
       if(m) return formatHM(+m[1],+m[2]);
-      const t=v.trim();
-      const test=new Date(`1970-01-01T${t.replace(/\s+/,' ')}`);
-      if(!isNaN(test)) return formatTime(test);
-      return t;
+      return v.trim();
     }
     if(typeof v==='number'){
       if(v>=0 && v<1){ const total=Math.round(v*86400); const h=Math.floor(total/3600); const m=Math.floor((total%3600)/60); return formatHM(h,m); }
-      const base=new Date(1899,11,30); const ms=v*86400*1000; const d=new Date(base.getTime()+ms); return formatTime(d);
     }
     return '';
   }
@@ -191,7 +188,7 @@
     return null;
   }
 
-  // ===== Gallery (from Pics sheet) =====
+  // ===== Gallery from Pics sheet =====
   async function fetchGalleryFromSheet(){
     try{
       const json = await fetchGviz(PICS_GID);
@@ -219,6 +216,7 @@
       return rows;
     }catch(e){ console.warn('Gallery sheet fetch failed', e); return []; }
   }
+
   async function loadGallery(){
     const grid=document.getElementById('photoGrid');
     grid.innerHTML='<span class="help">Loading photos…</span>';
@@ -228,13 +226,12 @@
         grid.innerHTML='';
         for(const img of rows){
           const a=document.createElement('a');
-          // Use the large Drive thumbnail for the lightbox (avoids 403/HTML from download)
-          a.href = img.src;                 // large image
-          a.setAttribute('data-src', img.src);
+          a.href = img.src;                        // fallback href
+          a.setAttribute('data-src', img.src);     // explicit large image for lightGallery
           a.setAttribute('data-sub-html', img.alt || 'Go Team');
 
           const el=document.createElement('img');
-          el.src = img.thumb || img.view || img.src; // fast thumb
+          el.src = img.thumb || img.view || img.src;
           el.alt = img.alt || '';
           el.loading = 'lazy';
           el.onerror = () => { if(img.view && el.src !== img.view){ el.src = img.view; } };
@@ -267,6 +264,7 @@
         const d=parseGvizDate(c[dateIdx]);
         let name=(c[nameIdx]?.v||'').toString().trim();
         if(/^(tbd|—|-)?$/i.test(name)) name='';
+        if(d&&!isNaN(d)) d.setHours(0,0,0,0);
         return d?{date: isoDate(d), name}:null;
       }).filter(Boolean);
       return rows;
@@ -303,7 +301,7 @@
           date: dStart?isoDate(dStart):'',
           type: (asText(c[idxs.type])||'').toLowerCase(),
           title: asText(c[idxs.title]),
-          time: parseGvizTime(c[idxs.time]),
+          time: parseGvizTime(c[idxs.time]) || asText(c[idxs.time]),
           location: asText(c[idxs.location]),
           notes: asText(c[idxs.notes]),
           endDate: dEnd?isoDate(dEnd):'',
@@ -335,30 +333,36 @@
       }
 
       let title = titleWithTime;
-      if(r.type==='game'){
-        const snack = snackMap.get(r.date);
-        if(snack) title += ` — Snacks: ${snack}`;
-      }
+      const snack = r.type==='game' ? (snackMap.get(r.date) || '') : '';
+      if(snack) title += ` — Snacks: ${snack}`;
 
       events.push({
         title,
         start:r.date,
         allDay:true,
         classNames:[r.type==='practice'?'practice-event':'game-event'],
-        extendedProps:{ type:r.type, tournament:!!r.tournament, meta:{location:r.location||'', notes:r.notes||''} }
+        extendedProps:{
+          type:r.type,
+          snack,
+          tournament:!!r.tournament,
+          meta:{location:r.location||'', notes:r.notes||''}
+        }
       });
     }
     return events;
   }
 
-  function renderPracticeDetailsFromMeta(meta,titleText){
+  // ===== Unified details view + smooth jump =====
+  function renderDetails({type, meta, snack}, titleText){
     const box=document.getElementById('practiceDetails');
-    if(!meta){ box.innerHTML='<p class="help">No practice details.</p>'; return; }
-    const locLine=meta.location?`<p><strong>Location:</strong> ${meta.location}</p>`:'';
-    const notesHtml=meta.notes?meta.notes.replace(/\n/g,'<br>'):'';
-    box.innerHTML=`<h3>${titleText}</h3>${locLine}${notesHtml?`<div>${notesHtml}</div>`:'<p class="help">Add notes in sheet.</p>'}`;
+    const locLine = meta?.location ? `<p><strong>Location:</strong> ${meta.location}</p>` : '';
+    const snackLine = (type==='game' && snack) ? `<p><strong>Snacks:</strong> ${snack}</p>` : '';
+    const notesHtml = meta?.notes ? meta.notes.replace(/\n/g,'<br>') : '';
+    box.innerHTML = `<h3>${titleText}</h3>${locLine}${snackLine}` + (notesHtml ? `<div>${notesHtml}</div>` : '<p class="help">Add notes in sheet.</p>');
+    box.scrollIntoView({behavior:'smooth', block:'start'});
   }
 
+  // ===== Bootstrap =====
   async function startCalendar(){
     let snackRows=[], scheduleRows=[];
     try{ snackRows=await fetchSnackRows(); }catch(e){ console.error('snacks',e); }
@@ -370,8 +374,20 @@
       initialView:'dayGridMonth', height:'auto', firstDay:0,
       headerToolbar:{ left:'prev,next today', center:'title', right:'dayGridMonth,listMonth' },
       events: buildEventsFromRows(scheduleRows, snackMap),
-      eventClick:function(info){ const {extendedProps}=info.event; if(extendedProps?.type==='practice'){ renderPracticeDetailsFromMeta(extendedProps.meta, info.event.title); } else if(extendedProps?.type==='game'){ alert(info.event.title); } },
-      eventContent:function(arg){ const t=arg.event.title||''; const i=t.indexOf('Snacks:'); if(i>=0){ const main=t.slice(0,i).trim(); const snack=t.slice(i).trim(); return { html:`<div>${main}</div><div>${snack}</div>` }; } return { html:`<div>${t}</div>` }; }
+      eventClick:function(info){
+        const {extendedProps}=info.event;
+        renderDetails(extendedProps, info.event.title);
+      },
+      eventContent:function(arg){
+        const t=arg.event.title||'';
+        const i=t.indexOf('Snacks:');
+        if(i>=0){
+          const main=t.slice(0,i).trim();
+          const snack=t.slice(i).trim();
+          return { html:`<div>${main}</div><div>${snack}</div>` };
+        }
+        return { html:`<div>${t}</div>` };
+      }
     });
     calendar.render();
   }
